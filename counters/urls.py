@@ -18,6 +18,6 @@ from django.urls import path, include
 from counters.readings.views import *
 
 urlpatterns = [
-    path('/admin', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', index, name='index')
 ]
