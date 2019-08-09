@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from .models import Counter, Value, Readings
 
@@ -24,26 +25,32 @@ class CounterAdmin(admin.ModelAdmin):
     list_display = ("counter_id", "region", "city", "owner")
 
 
+class ReadingsForm(forms.ModelForm):
+    class Meta:
+        model = Counter
+        fields = '__all__'
+
+    current_value = forms.IntegerField(label="Текущее значение")
+    
+    def save(self, commit=True):
+        current_value = self.cleaned_data.get("current_value", None)
+        last_value = self.instance.value
+        if current_value and (last_value is None or current_value > last_value.value) :
+            Value.objects.create(value=current_value, counter=self.instance)
+        return super().save(commit=commit)
+
+
 class ReadingsAdmin(CounterAdmin):
     verbose_name = "Поиск"
     search_fields = [
-        "counter__counter_id", "counter__region", "counter__owner", "counter__city", "counter__street"
+        "counter_id", "region", "owner", "city", "street"
     ]
-    fieldsets = (
-        ("Показання", {
-            "fields": ("value",),
-        }),
-    )
-
-
-# class ValueAdmin(admin.ModelAdmin):
-#     list_display = ("counter_id", "value")
-#     search_fields = [
-#         "counter__counter_id", "counter__region", "counter__owner", "counter__city", "counter__street"
-#     ]
-
-
-
+    readonly_fields = ('counter_id','last_value',)
+    fields =("counter_id", "last_value", "current_value") 
+    def last_value(self, object):
+        return object.value_set.last()
+    last_value.short_description = "Последнее показание"
+    form = ReadingsForm
 
 admin.site.register(Counter, CounterAdmin)
 admin.site.register(Readings, ReadingsAdmin)

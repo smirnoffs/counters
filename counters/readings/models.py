@@ -129,8 +129,11 @@ class Value(models.Model):
         verbose_name = "Показания"
         verbose_name_plural = "Показания"
 
-    counter_id = models.ForeignKey(Counter, on_delete=models.CASCADE)
+    counter = models.ForeignKey(Counter, on_delete=models.CASCADE)
     value = models.IntegerField(verbose_name="Значение:")
+
+    def __str__(self):
+        return f"{self.value}"
 
 
 class Readings(Counter):
@@ -139,8 +142,6 @@ class Readings(Counter):
         verbose_name = "Внесение показаний"
         verbose_name_plural = "Внесение показаний"
 
-
-
-
-
-
+    @property
+    def value(self):
+        return self.value_set.last()
